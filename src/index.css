@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+@theme {
+  /* Obsidian Cipher Color Tokens */
+  --color-background: #131313;
+  --color-surface: #131313;
+  --color-surface-container-lowest: #0e0e0e;
+  --color-surface-container-low: #1c1b1b;
+  --color-surface-container: #201f1f;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-container-highest: #353534;
+  --color-surface-bright: #3a3939;
+  --color-surface-variant: #353534;
+  --color-surface-tint: #00dbe7;
+  --color-on-surface: #e5e2e1;
+  --color-on-surface-variant: #b9cacb;
+  --color-primary: #e1fdff;
+  --color-primary-container: #00f2ff;
+  --color-primary-fixed: #74f5ff;
+  --color-primary-fixed-dim: #00dbe7;
+  --color-secondary: #a5c8ff;
+  --color-secondary-container: #2792ff;
+  --color-secondary-fixed: #d4e3ff;
+  --color-secondary-fixed-dim: #a5c8ff;
+  --color-tertiary: #fef5ff;
+  --color-tertiary-container: #ead2ff;
+  --color-tertiary-fixed: #efdbff;
+  --color-tertiary-fixed-dim: #dcb8ff;
+  --color-outline: #849495;
+  --color-outline-variant: #3a494b;
+
+  /* Typography */
+  --font-family-inter: 'Inter', sans-serif;
+  --font-family-space-grotesk: 'Space Grotesk', sans-serif;
+
+  --font-family-mono: 'JetBrains Mono', monospace;
+
+  /* Spacing/Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+}
+
+/* Base styles */
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-family-inter);
+    background-color: var(--color-background);
+    color: var(--color-on-surface);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Font utility classes */
+  .font-inter {
+    font-family: var(--font-family-inter);
+  }
+
+  .font-space-grotesk {
+    font-family: var(--font-family-space-grotesk);
+  }
+
+  .font-mono {
+    font-family: var(--font-family-mono);
+  }
+}
+
+/* Gradient utilities for CTA buttons */
+@utility bg-gradient-primary {
+  background: linear-gradient(135deg, #00F2FF 0%, #1E90FF 100%);
+}
+
+@utility text-gradient-primary {
+  background: linear-gradient(135deg, #00F2FF 0%, #1E90FF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Grid pattern for hero background */
+@utility bg-grid-pattern {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 40px,
+      rgba(255, 255, 255, 0.03) 40px,
+      rgba(255, 255, 255, 0.03) 41px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 40px,
+      rgba(255, 255, 255, 0.03) 40px,
+      rgba(255, 255, 255, 0.03) 41px
+    );
+}
+
+/* Dot pattern variant */
+@utility bg-dot-pattern {
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
