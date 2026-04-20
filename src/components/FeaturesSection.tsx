@@ -47,19 +47,19 @@ const features = [
 
 export default function FeaturesSection() {
   return (
-    <section className="relative w-full max-w-[1280px] mx-auto px-20 py-[100px]">
+    <section className="relative w-full max-w-[1280px] mx-auto px-6 py-16 md:px-20 md:py-[100px]">
       {/* Bottom Gradient Divider */}
       <div className="mb-20 h-[1px] w-full bg-gradient-to-r from-transparent via-[#3a494b]/30 to-transparent"></div>
 
       {/* Section Header */}
       <div className="mb-10">
         <span className="font-space-grotesk text-[#00f2ff] text-sm tracking-[0.2em] font-medium uppercase mb-4 block">CAPABILITIES</span>
-        <h2 className="font-inter text-5xl font-bold text-[#e5e2e1] tracking-tight mb-4 max-w-2xl">Everything you need to orchestrate agents.</h2>
-        <p className="font-inter text-[#e5e2e1]/70 text-xl max-w-2xl">MAH handles the plumbing so you can focus on your agents logic.</p>
+        <h2 className="font-inter text-3xl md:text-5xl font-bold text-[#e5e2e1] tracking-tight mb-4 max-w-2xl">Everything you need to orchestrate agents.</h2>
+        <p className="font-inter text-[#e5e2e1]/70 text-lg md:text-xl max-w-2xl">MAH handles the plumbing so you can focus on your agents' logic.</p>
       </div>
 
       {/* Feature Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {features.map((feature) => (
           <div
             key={feature.title}
@@ -84,10 +84,10 @@ export default function FeaturesSection() {
         ))}
       </div>
 
-      {/* Bottom Content Section */}
-      <section className="pb-2 grid grid-cols-1 md:grid-cols-12 gap-8 mt-16">
-        {/* Log Panel */}
-        <div className="col-span-12 md:col-span-7 bg-[#0e0e0e] border border-[#3a494b]/10 rounded-xl p-8 relative overflow-hidden">
+
+      {/* <section className="pb-2 grid grid-cols-1 md:grid-cols-12 gap-8 mt-16"> */}
+
+      {/* <div className="col-span-12 md:col-span-7 bg-[#0e0e0e] border border-[#3a494b]/10 rounded-xl p-8 relative overflow-hidden">
           <div className="flex justify-between items-center mb-6">
             <div className="flex gap-2">
               <div className="w-2 h-2 rounded-full bg-[#ffb4ab]"></div>
@@ -104,13 +104,12 @@ export default function FeaturesSection() {
             <p className="animate-pulse"><span className="text-[#e5e2e1]/30">14:02:18</span> <span className="text-[#a5c8ff]">[CRITIC]</span> verifying logical consistency...</p>
           </div>
           <div className="absolute -bottom-10 -right-10 opacity-20">
-            {/* <svg className="text-[160px] w-[240px] h-[160px] text-[#00f2ff]" fill="none" viewBox="0 3 24 24" stroke="currentColor">
+            <svg className="text-[160px] w-[240px] h-[160px] text-[#00f2ff]" fill="none" viewBox="0 3 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={0.5} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
-            </svg> */}
+            </svg>
           </div>
         </div>
 
-        {/* Text Content */}
         <div className="col-span-12 md:col-span-5 flex flex-col justify-center">
           <h4 className="font-inter text-3xl font-bold text-[#e5e2e1] mb-4">Code-driven autonomy.</h4>
           <p className="font-inter text-[#e5e2e1]/60 leading-relaxed">
@@ -124,8 +123,8 @@ export default function FeaturesSection() {
               </svg>
             </a>
           </div>
-        </div>
-      </section>
+        </div> */}
+      {/* </section> */}
       {/* Bottom Gradient Divider */}
       <div className="mt-22 mb-[-120px] h-[1px] w-full bg-gradient-to-r from-transparent via-[#3a494b]/30 to-transparent"></div>
 

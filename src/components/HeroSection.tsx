@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 type LeadCard = {
   title: string;
@@ -170,6 +170,17 @@ export default function HeroSection() {
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const preludeRef = useRef<HTMLDivElement | null>(null);
   const [cycleId, setCycleId] = useState(0);
+
+  const sessionId = useMemo(() => {
+    const now = new Date();
+    const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let hash = '';
+    for (let i = 0; i < 6; i++) {
+      hash += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return `${date}-${hash}`;
+  }, []);
   const [showPrelude, setShowPrelude] = useState(true);
   const [preludeTyped, setPreludeTyped] = useState('');
   const [mainReady, setMainReady] = useState(false);
@@ -289,7 +300,7 @@ export default function HeroSection() {
                   },
                 ]);
                 setPhaseIndex(1);
-              }, 320),
+              }, 500),
             );
           }
           return next;
@@ -326,7 +337,7 @@ export default function HeroSection() {
                   },
                 ]);
                 setPhaseIndex(2);
-              }, 350),
+              }, 500),
             );
           }
           return next;
@@ -442,7 +453,7 @@ export default function HeroSection() {
               className={`relative w-full overflow-hidden rounded-[28px] border border-[#3a494b]/28 bg-[#171717] shadow-[0_28px_90px_rgba(0,0,0,0.42)] transition-all duration-700 ${mainReady ? 'opacity-100' : 'opacity-0'
                 }`}
               style={{
-                height: 'clamp(560px, 68vh, 720px)',
+                height: window.innerWidth < 768 ? 'clamp(520px, 88vh, 720px)' : 'clamp(420px, 65vh, 720px)',
               }}
             >
               <div className="flex items-center justify-between border-b border-[#3a494b]/28 px-5 py-3">
@@ -481,19 +492,21 @@ export default function HeroSection() {
                   <div className="mb-4 h-px w-full bg-gradient-to-r from-[#00f2ff] via-[#2792ff] to-transparent opacity-50" />
 
                   <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    {leadCards.map((lead) =>
-                      lead.title === 'Engineering Lead' ? (
-                        <ActiveLeadTile
-                          key={lead.title}
-                          lead={lead}
-                          live={engineeringLeadLive}
-                          status={engineeringLeadStatus}
-                          task={engineeringLeadTask}
-                        />
-                      ) : (
-                        <LeadTile key={lead.title} lead={lead} />
-                      ),
-                    )}
+                    {leadCards
+                      .filter((lead) => typeof window !== 'undefined' && window.innerWidth < 768 ? lead.title === 'Engineering Lead' : true)
+                      .map((lead) =>
+                        lead.title === 'Engineering Lead' ? (
+                          <ActiveLeadTile
+                            key={lead.title}
+                            lead={lead}
+                            live={engineeringLeadLive}
+                            status={engineeringLeadStatus}
+                            task={engineeringLeadTask}
+                          />
+                        ) : (
+                          <LeadTile key={lead.title} lead={lead} />
+                        ),
+                      )}
                   </div>
 
                   <div className="mt-4 rounded-[2px] border border-[#3a494b]/28 bg-[#121212] px-4 py-3 font-mono text-sm text-[#e5e2e1]">
@@ -508,7 +521,7 @@ export default function HeroSection() {
                   </div>
 
                   <div className="mt-4 flex items-center justify-between font-mono text-[11px] uppercase tracking-[0.24em] text-[#b9cacb]">
-                    <span>glm-5 · orchestrator · 2026-04-19T16-52-42-155Z-jdir20</span>
+                    <span>glm-5 · orchestrator · {sessionId}</span>
                     <span>10.4m in 143.1k out $7.886 crew · [####----] 33%</span>
                   </div>
                 </div>

@@ -134,11 +134,11 @@ export default function ArchitectureSection() {
   const [hoveredLayer, setHoveredLayer] = useState<number | null>(null);
 
   return (
-    <section className="w-full py-[100px] px-[80px] md:px-[80px] flex flex-col items-center">
+    <section className="w-full py-16 px-5 md:py-[100px] md:px-[80px] flex flex-col items-center">
       {/* Header */}
       <div className="mb-[48px] w-full">
         <span className="font-space-grotesk text-[#00f2ff] text-sm font-bold tracking-[0.2em] uppercase block mb-4 ml-30">HOW IT WORKS</span>
-        <h2 className="font-inter text-4xl md:text-5xl font-bold tracking-tight text-[#e5e2e1] ml-30">
+        <h2 className="font-inter text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-[#e5e2e1] ml-30">
           From mission to result in three stages.
         </h2>
       </div>

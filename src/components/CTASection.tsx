@@ -1,30 +1,152 @@
-export default function CTASection() {
-  return (
-    <section className="w-full flex justify-center py-[100px]">
-      <div
-        className="w-full max-w-[720px] bg-[#1c1b1b] rounded-[16px] py-20 px-8 md:px-16 relative z-10 text-center flex flex-col items-center"
-        style={{
-          background: 'radial-gradient(circle at center, rgba(0, 242, 255, 0.05) 0%, transparent 70%)',
-        }}
-      >
-        {/* Abstract Background Elements */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#00f2ff]/5 rounded-full blur-[120px] -translate-x-1/2"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#2792ff]/5 rounded-full blur-[120px] translate-x-1/2"></div>
+import { useEffect, useRef } from 'react';
 
-        {/* Headline */}
-        <h1 className="text-[48px] font-bold text-[#e5e2e1] leading-[1.1] tracking-tight font-inter mb-4">
-          Stop wrestling agents. Start shipping clusters.
-        </h1>
+type Node = { x: number; y: number; vx: number; vy: number };
+
+export default function CTASection() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animId: number;
+    let nodes: Node[] = [];
+
+    const NODE_COUNT = window.innerWidth < 768 ? 100 : 200;
+    const MAX_DIST = 150;
+    const SPEED = 0.23;
+
+    function resize() {
+      canvas!.width = canvas!.offsetWidth * window.devicePixelRatio;
+      canvas!.height = canvas!.offsetHeight * window.devicePixelRatio;
+      ctx!.scale(window.devicePixelRatio, window.devicePixelRatio);
+    }
+
+    function initNodes() {
+      const w = canvas!.offsetWidth;
+      const h = canvas!.offsetHeight;
+      nodes = Array.from({ length: NODE_COUNT }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        vx: (Math.random() - 0.5) * SPEED * 2,
+        vy: (Math.random() - 0.5) * SPEED * 2,
+      }));
+    }
+
+    function draw() {
+      const w = canvas!.offsetWidth;
+      const h = canvas!.offsetHeight;
+      ctx!.clearRect(0, 0, w, h);
+
+      for (const node of nodes) {
+        node.x += node.vx;
+        node.y += node.vy;
+        if (node.x < 0 || node.x > w) node.vx *= -1;
+        if (node.y < 0 || node.y > h) node.vy *= -1;
+        node.x = Math.max(0, Math.min(w, node.x));
+        node.y = Math.max(0, Math.min(h, node.y));
+      }
+
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dxIJ = nodes[i].x - nodes[j].x;
+          const dyIJ = nodes[i].y - nodes[j].y;
+          const distIJ = Math.sqrt(dxIJ * dxIJ + dyIJ * dyIJ);
+          if (distIJ > MAX_DIST) continue;
+
+          for (let k = j + 1; k < nodes.length; k++) {
+            const dxIK = nodes[i].x - nodes[k].x;
+            const dyIK = nodes[i].y - nodes[k].y;
+            const distIK = Math.sqrt(dxIK * dxIK + dyIK * dyIK);
+            if (distIK > MAX_DIST) continue;
+
+            const dxJK = nodes[j].x - nodes[k].x;
+            const dyJK = nodes[j].y - nodes[k].y;
+            const distJK = Math.sqrt(dxJK * dxJK + dyJK * dyJK);
+            if (distJK > MAX_DIST) continue;
+
+            const avgDist = (distIJ + distIK + distJK) / 3;
+            const alpha = 0.008 * (1 - avgDist / MAX_DIST);
+            ctx!.beginPath();
+            ctx!.moveTo(nodes[i].x, nodes[i].y);
+            ctx!.lineTo(nodes[j].x, nodes[j].y);
+            ctx!.lineTo(nodes[k].x, nodes[k].y);
+            ctx!.closePath();
+            ctx!.fillStyle = `rgba(0, 242, 255, ${alpha})`;
+            ctx!.fill();
+          }
+        }
+      }
+
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > MAX_DIST) continue;
+
+          const alpha = 0.06 * (1 - dist / MAX_DIST);
+          ctx!.beginPath();
+          ctx!.moveTo(nodes[i].x, nodes[i].y);
+          ctx!.lineTo(nodes[j].x, nodes[j].y);
+          ctx!.strokeStyle = `rgba(0, 242, 255, ${alpha})`;
+          ctx!.lineWidth = 0.5;
+          ctx!.stroke();
+        }
+      }
+
+      for (const node of nodes) {
+        ctx!.beginPath();
+        ctx!.arc(node.x, node.y, 1.5, 0, Math.PI * 2);
+        ctx!.fillStyle = 'rgba(0, 242, 255, 0.2)';
+        ctx!.fill();
+      }
+
+      animId = requestAnimationFrame(draw);
+    }
+
+    resize();
+    initNodes();
+    draw();
+
+    const handleResize = () => { resize(); initNodes(); };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  return (
+    <section className="relative w-full overflow-hidden py-16 md:py-[100px]" style={{ minHeight: 'clamp(320px, 60vh, 480px)' }}>
+      {/* Full-width mesh canvas */}
+      <canvas ref={canvasRef} className="absolute inset-0 z-0 w-full h-full" />
+
+      {/* Content */}
+      <div className="relative z-10 flex flex-col items-center justify-center gap-8">
+        {/* Glass headline card */}
+        <div
+          className="rounded-xl flex items-center justify-center border border-[#3a494b]/10 backdrop-blur-md px-6 py-6 md:px-12 md:py-8"
+          style={{ background: 'rgba(28, 27, 27, 0.21)' }}
+        >
+          <h1 className="text-3xl md:text-[48px] sm:text-[18px] font-bold text-[#e5e2e1] leading-[1.1] tracking-tight font-inter text-center">
+            Stop wrestling agents.<br />Start <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2ff] to-[#2792ff]">shipping solutions.</span>
+          </h1>
+        </div>
 
         {/* Subheadline */}
-        <p className="text-[#e5e2e1]/70 text-lg md:text-xl max-w-[540px] font-inter mb-8">
+        <p className="text-[#e5e2e1]/70 text-lg md:text-xl max-w-[540px] font-inter text-center">
           One YAML manifest. Any runtime. Structured expertise routing, operational memory, and headless execution — out of the box.
         </p>
 
-        {/* Primary CTA */}
-        <div className="flex flex-col items-center gap-4 w-full">
+        {/* Buttons + Trust signals */}
+        <div className="flex flex-col items-center gap-6">
+          {/* Primary CTA */}
           <a
-            className="w-full md:w-auto px-12 py-5 rounded-xl font-bold text-white text-lg tracking-tight hover:brightness-110 active:scale-[0.98] transition-all"
+            className="px-12 py-5 rounded-xl font-bold text-white text-lg tracking-tight hover:brightness-110 active:scale-[0.98] transition-all"
             href="#"
             style={{
               background: 'linear-gradient(135deg, #00f2ff 0%, #2792ff 100%)',
@@ -44,33 +166,33 @@ export default function CTASection() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
           </a>
-        </div>
 
-        {/* Trust Signals Row */}
-        <div className="mt-12 flex flex-wrap justify-center gap-6">
-          <div className="flex items-center gap-2 px-4 py-1.5 bg-[#201f1f] rounded-full">
-            <svg className="text-[#00f2ff] text-[14px] w-[14px] h-[14px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <span className="font-space-grotesk text-xs uppercase tracking-widest text-[#e5e2e1]/80">MIT License</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-1.5 bg-[#201f1f] rounded-full">
-            <svg className="text-[#00f2ff] text-[14px] w-[14px] h-[14px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span className="font-space-grotesk text-xs uppercase tracking-widest text-[#e5e2e1]/80">Runtime-agnostic</span>
-          </div>
-          <div className="flex items-center gap-2 px-4 py-1.5 bg-[#201f1f] rounded-full">
-            <svg className="text-[#00f2ff] text-[14px] w-[14px] h-[14px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <span className="font-space-grotesk text-xs uppercase tracking-widest text-[#e5e2e1]/80">Plugin system</span>
+          {/* Trust Signals Row */}
+          <div className="mt-4 flex flex-wrap justify-center gap-6">
+            <div className="flex items-center gap-2 px-4 py-1.5 bg-[#201f1f] rounded-full">
+              <svg className="text-[#00f2ff] text-[14px] w-[14px] h-[14px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span className="font-space-grotesk text-xs uppercase tracking-widest text-[#e5e2e1]/80">MIT License</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-1.5 bg-[#201f1f] rounded-full">
+              <svg className="text-[#00f2ff] text-[14px] w-[14px] h-[14px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span className="font-space-grotesk text-xs uppercase tracking-widest text-[#e5e2e1]/80">Runtime-agnostic</span>
+            </div>
+            <div className="flex items-center gap-2 px-4 py-1.5 bg-[#201f1f] rounded-full">
+              <svg className="text-[#00f2ff] text-[14px] w-[14px] h-[14px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <span className="font-space-grotesk text-xs uppercase tracking-widest text-[#e5e2e1]/80">Plugin system</span>
+            </div>
           </div>
         </div>
-
-        {/* Decorative Visual Token */}
-        <div className="absolute -bottom-px left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-[#00f2ff]/30 to-transparent"></div>
       </div>
+
+      {/* Decorative bottom line */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00f2ff]/30 to-transparent"></div>
     </section>
   );
 }

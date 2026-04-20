@@ -3,7 +3,6 @@ import HeroSection from './components/HeroSection';
 import FeaturesSection from './components/FeaturesSection';
 import ArchitectureSection from './components/ArchitectureSection';
 import CTASection from './components/CTASection';
-import FooterArtSection from './components/FooterArtSection';
 import Footer from './components/Footer';
 
 export default function App() {
@@ -15,7 +14,7 @@ export default function App() {
         <FeaturesSection />
         <ArchitectureSection />
         <CTASection />
-        <FooterArtSection />
+        {/* FooterArtSection merged into CTA */}
       </main>
       <Footer />
     </div>
