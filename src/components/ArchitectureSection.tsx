@@ -9,7 +9,7 @@ const stages = [
     ),
     label: 'DEFINE',
     subtitle: 'Crew + Tasks + Tools',
-    description: 'Write your crew manifest. Assign roles, prompts, and tool access.',
+    description: 'Declare crews, agents, and domain profiles in meta-agents.yaml. One config, every runtime.',
     borderColor: '#00f2ff',
     iconColor: '#00f2ff',
     shadowColor: 'rgba(0,242,255,0.04)',
@@ -21,8 +21,8 @@ const stages = [
       </svg>
     ),
     label: 'ORCHESTRATE',
-    subtitle: 'Agent to Agent to Output',
-    description: 'MAH routes tasks to the right agent. Outputs become inputs for the next stage.',
+    subtitle: 'Expertise-Aware Routing',
+    description: 'Structured expertise routing with confidence scoring. Context memory loads operational knowledge automatically.',
     borderColor: '#2792ff',
     iconColor: '#2792ff',
     shadowColor: 'rgba(39,146,255,0.04)',
@@ -34,8 +34,8 @@ const stages = [
       </svg>
     ),
     label: 'SHIP',
-    subtitle: 'Production Pipeline',
-    description: 'Deploy your agent crew as a standalone pipeline. Monitor, iterate, repeat.',
+    subtitle: 'Headless & CI/CD',
+    description: 'Run headless or interactive in any CI/CD pipeline. Validate, sync, and ship solutions across runtimes with one command.',
     borderColor: '#ead2ff',
     iconColor: '#ead2ff',
     shadowColor: 'rgba(234,210,255,0.04)',
@@ -43,6 +43,14 @@ const stages = [
 ];
 
 const layers = [
+  {
+    name: 'Crew Definition',
+    title: 'Crew Definition',
+    desc: 'Declare crews, agents, topology, and domain profiles in a single meta-agents.yaml. One manifest, every runtime.',
+    cli: 'mah init',
+    color: '#74f5ff',
+    glowColor: 'rgba(116,245,255,0.1)',
+  },
   {
     name: 'Expertise',
     title: 'Expertise Model',
@@ -86,7 +94,36 @@ const layers = [
 ];
 
 const terminalContent: Record<number, string> = {
-  0: `➜ mah expertise recommend --task "deploy pipeline"
+  0: `---  
+version: 1
+name: "my-project"
+description: "My project description"
+domain_profiles:  
+  frontend-impl:  
+  - path: src/*
+    read: true
+    edit: true
+    bash: true
+crews:  
+  - id: dev
+    topology:  
+      orchestrator: Orchestrator
+      leads:  
+        planning: Planning-lead
+        engineering: Engineering-lead
+        validation: Validation-lead
+      workers:  
+        planning:  
+          - Repo-analyst
+          - Sol-architect
+        engineering:  
+          - Backend-dev
+          - Frontend-dev
+        validation:  
+          - QA-engineer
+
+# meta-agents.yaml`,
+  1: `➜ mah expertise recommend --task "deploy pipeline"
 → routing to: engineering-lead (confidence: 0.94)
 
 ➜ mah expertise explain --task "deploy pipeline"
@@ -94,7 +131,7 @@ const terminalContent: Record<number, string> = {
 
 ➜ mah expertise show dev/engineering-lead
 → status: active | capabilities: 7 | domains: 3`,
-  1: `➜ mah context find --agent engineering-lead --task "deploy pipeline"
+  2: `➜ mah context find --agent engineering-lead --task "deploy pipeline"
 → loaded 3 operational memories (relevance: 0.87)
 
 ➜ mah context explain --agent engineering-lead --task "deploy pipeline"
@@ -102,7 +139,7 @@ const terminalContent: Record<number, string> = {
 
 ➜ mah context validate --path .mah/context/operational/
 → ✓ 12 documents validated, 0 errors`,
-  2: `➜ mah sessions resume --last
+  3: `➜ mah sessions resume --last
 → session: hermes:dev:a8f3c... | agents: 4 active
 
 ➜ mah sessions list --crew dev --limit 5
@@ -110,7 +147,7 @@ const terminalContent: Record<number, string> = {
 
 ➜ mah context propose --from-session hermes:dev:a8f3c
 → draft written to .mah/context/proposals/`,
-  3: `---
+  4: `---  
 name: web-research
 description: Run evidence-based web research with Brave Search for discovery and Firecrawl for extraction/synthesis.
 compatibility: [generic]
@@ -121,14 +158,25 @@ compatibility: [generic]
 Use this skill when a task depends on up-to-date external information (platform selection, market scans, benchmarks, references, trend checks).`,
 };
 
-const defaultTerminal = `➜ mah expertise recommend --task "deploy pipeline"
-→ routing to: engineering-lead (confidence: 0.94)
+const defaultTerminal =
+  `       
+                      ┌────────────────────┐
+                      │    Orchestrator    │
+                      └─────────┬──────────┘
+                                │
+                ┌───────────────┼───────────────┐
+          ┌─────┴─────┐  ┌──────┴──────┐  ┌─────┴──────┐
+          │ Planning  │  │ Engineering │  │ Validation │
+          │   Lead    │  │    Lead     │  │    Lead    │
+          └─────┬─────┘  └──────┬──────┘  └─────┬──────┘
+                │               │               │
+         ┌──────┴──────┐ ┌──────┴──────┐  ┌─────┴──────┐
+         │Repo-Analyst │ │Frontend-dev │  │QA-Engineer │
+         │Sol-Architect│ │ Backend-dev │  │            │
+         └─────────────┘ └─────────────┘  └────────────┘
 
-➜ mah context find --agent engineering-lead --task "deploy pipeline"
-→ loaded 3 operational memories
-
-➜ mah sessions resume --last
-→ session: hermes:dev:a8f3c...`;
+# topology: dev crew
+# meta-agents.yaml`;
 
 export default function ArchitectureSection() {
   const [hoveredLayer, setHoveredLayer] = useState<number | null>(null);
