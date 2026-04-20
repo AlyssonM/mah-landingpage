@@ -83,78 +83,46 @@ const layers = [
     color: '#e5e2e1',
     glowColor: 'rgba(229,226,225,0.1)',
   },
-  // {
-  //   name: 'Memory',
-  //   title: 'Memory',
-  //   desc: 'Conversational and working context. The persistent recall layer for agent interactions.',
-  //   cli: null,
-  //   color: '#b9cacb',
-  //   glowColor: 'rgba(185,202,203,0.1)',
-  // },
 ];
 
 const terminalContent: Record<number, string> = {
-  0: `---  
+  0: `---
 version: 1
 name: "my-project"
-description: "My project description"
-domain_profiles:  
-  frontend-impl:  
-  - path: src/*
-    read: true
-    edit: true
-    bash: true
-crews:  
-  - id: dev
-    topology:  
-      orchestrator: Orchestrator
-      leads:  
-        planning: Planning-lead
-        engineering: Engineering-lead
-        validation: Validation-lead
-      workers:  
-        planning:  
-          - Repo-analyst
-          - Sol-architect
-        engineering:  
-          - Backend-dev
-          - Frontend-dev
-        validation:  
-          - QA-engineer
-
+crews:
+  - id: dev
+    topology:
+      orchestrator: orchestrator
+      leads:
+        planning: planning-lead
+      workers:
+        planning:
+          - repo-analyst
 # meta-agents.yaml`,
   1: `➜ mah expertise recommend --task "deploy pipeline"
 → routing to: engineering-lead (confidence: 0.94)
-
 ➜ mah expertise explain --task "deploy pipeline"
 → evidence: 3 matching capabilities, trust_tier: verified
-
 ➜ mah expertise show dev/engineering-lead
 → status: active | capabilities: 7 | domains: 3`,
   2: `➜ mah context find --agent engineering-lead --task "deploy pipeline"
 → loaded 3 operational memories (relevance: 0.87)
-
 ➜ mah context explain --agent engineering-lead --task "deploy pipeline"
 → matched by: capability(0.3) + tool(0.2) + pattern(0.2)
-
 ➜ mah context validate --path .mah/context/operational/
 → ✓ 12 documents validated, 0 errors`,
   3: `➜ mah sessions resume --last
 → session: hermes:dev:a8f3c... | agents: 4 active
-
 ➜ mah sessions list --crew dev --limit 5
 → 3 sessions found | latest: 2h ago
-
 ➜ mah context propose --from-session hermes:dev:a8f3c
 → draft written to .mah/context/proposals/`,
-  4: `---  
+  4: `---
 name: web-research
 description: Run evidence-based web research with Brave Search for discovery and Firecrawl for extraction/synthesis.
 compatibility: [generic]
 ---
-
 # Web Research
-
 Use this skill when a task depends on up-to-date external information (platform selection, market scans, benchmarks, references, trend checks).`,
 };
 
@@ -178,35 +146,49 @@ const defaultTerminal =
 # topology: dev crew
 # meta-agents.yaml`;
 
+function renderTerminalContent(content: string) {
+  return content.split('\n').map((line, i) => {
+    if (line.startsWith('---') || line === '---') {
+      return <div key={i} className="text-[#00f2ff] font-mono">{line}</div>;
+    }
+    const colonIdx = line.indexOf(': ');
+    if (colonIdx !== -1 && !line.startsWith('➜') && !line.startsWith('→') && !line.startsWith('#')) {
+      return (
+        <div key={i} className="font-mono">
+          <span className="text-[#00f2ff]">{line.slice(0, colonIdx + 1)}</span>
+          <span className="text-[#b9cacb]/80">{line.slice(colonIdx + 1)}</span>
+        </div>
+      );
+    }
+    if (line.startsWith('# ')) {
+      return <div key={i} className="text-[#e5e2e1] font-bold font-mono mt-2">{line}</div>;
+    }
+    if (line.startsWith('→')) {
+      return <div key={i} className="font-mono">{line}</div>;
+    }
+    if (line.startsWith('➜')) {
+      return <div key={i} className="text-[#00f2ff] font-mono">{line}</div>;
+    }
+    return <div key={i} className="font-mono">{line}</div>;
+  });
+}
+
 export default function ArchitectureSection() {
   const [hoveredLayer, setHoveredLayer] = useState<number | null>(null);
+  const [tappedLayer, setTappedLayer] = useState<number | null>(null);
 
   return (
     <section className="w-full py-16 px-5 md:py-[100px] md:px-[80px] flex flex-col items-center">
       {/* Header */}
       <div className="mb-[48px] w-full">
-        <span className="font-space-grotesk text-[#00f2ff] text-sm font-bold tracking-[0.2em] uppercase block mb-4 ml-30">HOW IT WORKS</span>
-        <h2 className="font-inter text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-[#e5e2e1] ml-30">
+        <span className="font-space-grotesk text-[#00f2ff] text-sm font-bold tracking-[0.2em] uppercase block mb-4">HOW IT WORKS</span>
+        <h2 className="font-inter text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-[#e5e2e1]">
           From mission to result in three stages.
         </h2>
       </div>
 
       {/* Pipeline Visual */}
       <div className="relative flex flex-col md:flex-row items-start justify-center gap-[40px] md:gap-[120px] w-full">
-        {/* Connector Line (Desktop only) */}
-        <div className="hidden md:block absolute top-[60px] left-[280px] right-[280px] h-[2px] bg-[#353534]">
-          <div className="absolute left-1/3 top-0 h-full w-[2px]">
-            <svg className="absolute -right-[9px] top-[-8px] text-[#353534]" style={{ fontSize: '20px' }} fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
-            </svg>
-          </div>
-          <div className="absolute left-2/3 top-0 h-full w-[2px]">
-            <svg className="absolute -right-[9px] top-[-8px] text-[#353534]" style={{ fontSize: '20px' }} fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
-            </svg>
-          </div>
-        </div>
-
         {stages.map((stage) => (
           <div
             key={stage.label}
@@ -243,81 +225,61 @@ export default function ArchitectureSection() {
         {/* Left Column: Layered Stack (7 cols) */}
         <div className="md:col-span-7 flex flex-col gap-4">
           {layers.map((layer, index) => (
-            <div
-              key={layer.name}
-              className="border-l-2 rounded-r-xl p-4 flex items-start gap-4 transition-all duration-300 cursor-default"
-              style={{
-                borderLeftColor: layer.color,
-                boxShadow: hoveredLayer === index ? `0 0 20px ${layer.glowColor}` : 'none',
-                background: hoveredLayer === index ? 'rgba(28, 27, 27, 0.3)' : 'rgba(28, 27, 27, 0.4)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-              }}
-              onMouseEnter={() => setHoveredLayer(index)}
-              onMouseLeave={() => setHoveredLayer(null)}
-            >
-              <div className="flex-1">
-                <div
-                  className="font-space-grotesk text-xs font-bold uppercase tracking-wider mb-1"
-                  style={{ color: layer.color }}
-                >
-                  {layer.name}
+            <div key={layer.name}>
+              <div
+                className="border-l-2 rounded-r-xl p-4 flex items-start gap-4 transition-all duration-300 cursor-pointer"
+                style={{
+                  borderLeftColor: layer.color,
+                  boxShadow: hoveredLayer === index ? `0 0 20px ${layer.glowColor}` : 'none',
+                  background: hoveredLayer === index ? 'rgba(28, 27, 27, 0.3)' : 'rgba(28, 27, 27, 0.4)',
+                  backdropFilter: 'blur(12px)',
+                  WebkitBackdropFilter: 'blur(12px)',
+                }}
+                onMouseEnter={() => setHoveredLayer(index)}
+                onMouseLeave={() => setHoveredLayer(null)}
+                onClick={() => {
+                  if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                    setTappedLayer(tappedLayer === index ? null : index);
+                  }
+                }}
+              >
+                <div className="flex-1">
+                  <div
+                    className="font-space-grotesk text-xs font-bold uppercase tracking-wider mb-1"
+                    style={{ color: layer.color }}
+                  >
+                    {layer.name}
+                  </div>
+                  <div className="font-inter font-bold text-[#e5e2e1] mb-2">{layer.title}</div>
+                  <div className="font-inter text-sm text-[#b9cacb]">{layer.desc}</div>
                 </div>
-                <div className="font-inter font-bold text-[#e5e2e1] mb-2">{layer.title}</div>
-                <div className="font-inter text-sm text-[#b9cacb]">{layer.desc}</div>
+                {layer.cli && (
+                  <div className="font-mono text-xs text-[#e5e2e1]/60 shrink-0 hidden sm:block transition-opacity duration-300 opacity-60 hover:opacity-100">
+                    {layer.cli}
+                  </div>
+                )}
               </div>
-              {layer.cli && (
-                <div className="font-mono text-xs text-[#e5e2e1]/60 shrink-0 hidden sm:block transition-opacity duration-300 opacity-60 hover:opacity-100">
-                  {layer.cli}
+              {/* Mobile inline terminal */}
+              {tappedLayer === index && typeof window !== 'undefined' && window.innerWidth < 768 && (
+                <div className="bg-[#0e0e0e] rounded-xl p-4 mt-2 animate-fade-in">
+                  <div className="font-mono text-sm text-[#b9cacb]/60">
+                    {renderTerminalContent(terminalContent[index] ?? '')}
+                  </div>
                 </div>
               )}
             </div>
           ))}
         </div>
 
-        {/* Right Column: Terminal Panel (5 cols) */}
-        <div className="md:col-span-5">
+        {/* Right Column: Terminal Panel (5 cols) - Desktop only */}
+        <div className="hidden md:block md:col-span-5">
           <div className="bg-[#0e0e0e] rounded-xl p-6">
             <div
               key={hoveredLayer}
               className="font-mono text-sm animate-fade-in"
               style={{ animation: 'fadeIn 0.3s ease-out' }}
             >
-              {(terminalContent[hoveredLayer ?? -1] ?? defaultTerminal).split('\n').map((line, i) => {
-                // Handle special line types
-                if (line.startsWith('---') || line === '---') {
-                  return <div key={i} className="text-[#00f2ff] mt-3 first:mt-0 font-mono">{line}</div>;
-                }
-
-                // YAML key: value pattern (e.g., "name: web-research")
-                const colonIdx = line.indexOf(': ');
-                if (colonIdx !== -1 && !line.startsWith('➜') && !line.startsWith('→') && !line.startsWith('#')) {
-                  return (
-                    <div key={i} className="text-[#b9cacb]/60 font-mono">
-                      <span className="text-[#00f2ff]">{line.slice(0, colonIdx + 1)}</span>
-                      <span className="text-[#b9cacb]/80">{line.slice(colonIdx + 1)}</span>
-                    </div>
-                  );
-                }
-
-                // Comment/heading lines (e.g., "# Web Research")
-                if (line.startsWith('# ')) {
-                  return <div key={i} className="text-[#e5e2e1] font-bold font-mono mt-2">{line}</div>;
-                }
-
-                // Arrow lines
-                if (line.startsWith('→')) {
-                  return <div key={i} className="text-[#b9cacb]/60 font-mono">{line}</div>;
-                }
-
-                // Prompt lines (existing behavior)
-                if (line.startsWith('➜')) {
-                  return <div key={i} className="text-[#00f2ff] mt-3 first:mt-0 font-mono">{line}</div>;
-                }
-
-                // Default
-                return <div key={i} className="text-[#b9cacb]/60 font-mono">{line}</div>;
-              })}
+              {renderTerminalContent(terminalContent[hoveredLayer ?? -1] ?? defaultTerminal)}
             </div>
 
             <div className="mt-6 pt-4 border-t border-[#3a494b]/30">
