@@ -2,30 +2,30 @@ import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 
 type TranscriptBlock =
   | {
-      kind: 'command';
-      command: string;
-      description: string;
-    }
+    kind: 'command';
+    command: string;
+    description: string;
+  }
   | {
-      kind: 'routing';
-      lines: string[];
-      accent: string;
-    }
+    kind: 'routing';
+    lines: string[];
+    accent: string;
+  }
   | {
-      kind: 'context';
-      lines: string[];
-      accent: string;
-    }
+    kind: 'context';
+    lines: string[];
+    accent: string;
+  }
   | {
-      kind: 'streaming';
-      content: string;
-      accent: string;
-    }
+    kind: 'streaming';
+    content: string;
+    accent: string;
+  }
   | {
-      kind: 'lifecycle';
-      lines: string[];
-      accent: string;
-    };
+    kind: 'lifecycle';
+    lines: string[];
+    accent: string;
+  };
 
 const commandLine = 'mah expertise explain --task "restore hero title and colors"';
 const commandDescription = 'Query routing recommendation';
@@ -68,6 +68,22 @@ const transcriptSequence: TranscriptBlock[] = [
   { kind: 'streaming', content: streamingContent, accent: '#ead2ff' },
   { kind: 'lifecycle', lines: lifecycleLines, accent: '#86f7e7' },
 ];
+
+const HERO_TERMINAL_TIMING = {
+  preludeCharMs: 40,
+  preludeExitPauseMs: 700,
+  promptCharMs: 15,
+  promptToTranscriptPauseMs: 200,
+  lifecycleRetryPollMs: 100,
+  cycleRestartPauseMs: 2000,
+  blocks: {
+    command: { enterMs: 0, dwellMs: 1200 },
+    routing: { enterMs: 0, dwellMs: 1200 },
+    context: { enterMs: 0, dwellMs: 1200 },
+    streaming: { enterMs: 0, dwellMs: 500 },
+    lifecycle: { enterMs: 1000, dwellMs: 200 },
+  },
+} as const;
 
 function CommandCard(props: { command: string; description: string }) {
   return (
@@ -235,10 +251,10 @@ export default function HeroSection() {
             if (cancelled) return;
             setShowPrelude(false);
             setMainReady(true);
-          }, 700),
+          }, HERO_TERMINAL_TIMING.preludeExitPauseMs),
         );
       }
-    }, 40);
+    }, HERO_TERMINAL_TIMING.preludeCharMs);
 
     return () => {
       cancelled = true;
@@ -258,6 +274,7 @@ export default function HeroSection() {
     setTypedPrompt('');
     setPhaseIndex(null);
     setHistory([]);
+    setStreamingDone(false);
 
     const promptTimer = window.setInterval(() => {
       if (cancelled) return;
@@ -270,10 +287,10 @@ export default function HeroSection() {
         timers.push(
           window.setTimeout(() => {
             if (!cancelled) setPhaseIndex(0);
-          }, 200),
+          }, HERO_TERMINAL_TIMING.promptToTranscriptPauseMs),
         );
       }
-    }, 18);
+    }, HERO_TERMINAL_TIMING.promptCharMs);
 
     return () => {
       cancelled = true;
@@ -288,7 +305,7 @@ export default function HeroSection() {
     if (phaseIndex >= transcriptSequence.length) {
       const doneTimer = window.setTimeout(() => {
         setCycleId((v) => v + 1);
-      }, 1200);
+      }, HERO_TERMINAL_TIMING.cycleRestartPauseMs);
       return () => {
         window.clearTimeout(doneTimer);
       };
@@ -300,26 +317,52 @@ export default function HeroSection() {
     if (block.kind === 'lifecycle' && !streamingDone) {
       const retryTimer = window.setTimeout(() => {
         setPhaseIndex((prev) => prev);
-      }, 100);
+      }, HERO_TERMINAL_TIMING.lifecycleRetryPollMs);
       return () => window.clearTimeout(retryTimer);
     }
 
-    let delay = 550;
-    if (block.kind === 'lifecycle') {
-      delay = 500;
+    let enterDelay: number = HERO_TERMINAL_TIMING.blocks.command.enterMs;
+    let dwellDelay: number = HERO_TERMINAL_TIMING.blocks.command.dwellMs;
+    if (block.kind === 'command') {
+      enterDelay = HERO_TERMINAL_TIMING.blocks.command.enterMs;
+      dwellDelay = HERO_TERMINAL_TIMING.blocks.command.dwellMs;
+    } else if (block.kind === 'routing') {
+      enterDelay = HERO_TERMINAL_TIMING.blocks.routing.enterMs;
+      dwellDelay = HERO_TERMINAL_TIMING.blocks.routing.dwellMs;
+    } else if (block.kind === 'context') {
+      enterDelay = HERO_TERMINAL_TIMING.blocks.context.enterMs;
+      dwellDelay = HERO_TERMINAL_TIMING.blocks.context.dwellMs;
     } else if (block.kind === 'streaming') {
-      delay = 400;
+      enterDelay = HERO_TERMINAL_TIMING.blocks.streaming.enterMs;
+      dwellDelay = HERO_TERMINAL_TIMING.blocks.streaming.dwellMs;
+    } else if (block.kind === 'lifecycle') {
+      enterDelay = HERO_TERMINAL_TIMING.blocks.lifecycle.enterMs;
+      dwellDelay = HERO_TERMINAL_TIMING.blocks.lifecycle.dwellMs;
     }
+
+    let advanceTimer: number | null = null;
 
     const timer = window.setTimeout(() => {
       setHistory((prev) => [...prev, block]);
-      if (block.kind === 'streaming') {
-        setStreamingDone(false); // reset so lifecycle waits
-      }
-      setPhaseIndex((prev) => (prev !== null ? prev + 1 : null));
-    }, delay);
+      advanceTimer = window.setTimeout(() => {
+        setPhaseIndex((prev) => {
+          if (prev === null) return null;
+          const nextPhase = prev + 1;
+          const nextBlock = transcriptSequence[nextPhase];
+          if (nextBlock?.kind === 'streaming') {
+            setStreamingDone(false);
+          }
+          return nextPhase;
+        });
+      }, dwellDelay);
+    }, enterDelay);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+      if (advanceTimer !== null) {
+        window.clearTimeout(advanceTimer);
+      }
+    };
   }, [phaseIndex, mainReady, streamingDone]);
 
   // Keep only the terminal transcript scrolled, never the whole page.
