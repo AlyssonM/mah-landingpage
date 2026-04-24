@@ -1,167 +1,187 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-
-type LeadCard = {
-  title: string;
-  subtitle: string;
-  status: string;
-  task: string;
-  accent: string;
-};
+import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 
 type TranscriptBlock =
   | {
-    kind: 'tool';
-    command: string;
-    lead: string;
-    task: string;
-    seconds: number;
-    done: boolean;
-    accent: string;
-  }
+      kind: 'command';
+      command: string;
+      description: string;
+    }
   | {
-    kind: 'response';
-    paragraphs: string[];
-    accent: string;
-  };
+      kind: 'routing';
+      lines: string[];
+      accent: string;
+    }
+  | {
+      kind: 'context';
+      lines: string[];
+      accent: string;
+    }
+  | {
+      kind: 'streaming';
+      content: string;
+      accent: string;
+    }
+  | {
+      kind: 'lifecycle';
+      lines: string[];
+      accent: string;
+    };
 
-const promptText = 'Generate the react components using the system design from Stitch MCP server';
-const preludeCommand = 'mah --runtime pi run -c';
-const toolTask = '## Task: Restore Hero Title Text and Colors (Obsidian Cipher palette)';
-const runningSecondsGoal = 6;
+const commandLine = 'mah expertise explain --task "restore hero title and colors"';
+const commandDescription = 'Query routing recommendation';
 
-const responseParagraphs = [
-  'I can see the current state - the title, badge, and colors have all been changed from the Obsidian Cipher palette',
-  '(cyan/blue) to a green/teal theme. Let me restore just the title text and colors without touching the terminal animation.',
+const routingLines = [
+  '→ routing to: engineering-lead',
+  '→ confidence: 0.93 | match: expertise(routing) + context(deps)',
+  '→ 3 agents considered, 1 selected',
 ];
 
-const doneMessage = 'Done. Hero title restored and colors returned to the Obsidian Cipher palette.';
-
-const leadCards: LeadCard[] = [
-  {
-    title: 'Planning Lead',
-    subtitle: 'Lead · Planning',
-    status: 'o idle',
-    task: 'Planning Lead planning lead',
-    accent: '#7bf5dc',
-  },
-  {
-    title: 'Engineering Lead',
-    subtitle: 'Lead · Engineering',
-    status: '✓ done 40s',
-    task: '## Task: Left-align Architecture...',
-    accent: '#7fd1ff',
-  },
-  {
-    title: 'Validation Lead',
-    subtitle: 'Lead · Validation',
-    status: '✓ done 23s',
-    task: '## Quick Build Verification Run ...',
-    accent: '#86f7e7',
-  },
+const contextLines = [
+  '→ context loaded: 2 memories (relevance 0.88)',
+  '→ bounded: no task-level state carried over',
+  '→ operational memory: .mah/context/operational/',
 ];
 
-function ToolCard(props: Extract<TranscriptBlock, { kind: 'tool' }>) {
-  const { command, lead, task, seconds, done, accent } = props;
+const streamingContent = `{
+  "task": "restore hero title and colors",
+  "agent": "engineering-lead",
+  "actions": [
+    { "step": 1, "op": "read", "target": "HeroSection.tsx" },
+    { "step": 2, "op": "patch", "field": "badge.text", "value": "runtime-agnostic · operational intelligence" },
+    { "step": 3, "op": "patch", "field": "title.color", "value": "from-[#00f2ff] to-[#7a8cff]" },
+    { "step": 4, "op": "verify", "check": "palette-cyan-blue" }
+  ],
+  "status": "completed",
+  "duration_ms": 4120
+}`;
 
+const lifecycleLines = [
+  '→ queued → routed → running → completed',
+  '→ execution visible: 4s total, 0 retries',
+  '→ session saved: mah sessions list --last',
+];
+
+const transcriptSequence: TranscriptBlock[] = [
+  { kind: 'command', command: commandLine, description: commandDescription },
+  { kind: 'routing', lines: routingLines, accent: '#00f2ff' },
+  { kind: 'context', lines: contextLines, accent: '#7bf5dc' },
+  { kind: 'streaming', content: streamingContent, accent: '#ead2ff' },
+  { kind: 'lifecycle', lines: lifecycleLines, accent: '#86f7e7' },
+];
+
+function CommandCard(props: { command: string; description: string }) {
   return (
-    <div
-      className="mb-4 rounded-[2px] border border-[#0f5d66]/70 bg-[#103236]/96 px-4 py-3 font-mono text-[12px] leading-5 text-[#f4fffd]"
-      style={{
-        boxShadow: 'inset 0 0 0 1px rgba(120, 242, 198, 0.08)',
-      }}
-    >
-      <div className="truncate text-[#f4fffd]">
-        <span className="text-[#00f2ff]">{command.split(' — ')[0]}</span>
-        <span className="text-[#f4fffd]"> — </span>
-        <span className="text-[#f4fffd]">{task}</span>
-      </div>
-      <div className="mt-1 flex items-center gap-2 text-[#f4fffd]">
-        <span className="text-[#00f2ff]">{done ? '✓' : '●'}</span>
-        <span style={{ color: accent }}>{lead}</span>
-        <span className="text-[#f4fffd]/88">{done ? `${seconds}s` : `running ${seconds}s`}</span>
-      </div>
-      {!done ? <div className="mt-1 text-[#f4fffd]/82">working...</div> : null}
+    <div className="mb-4 rounded-[2px] border border-[#0f5d66]/70 bg-[#103236]/96 px-4 py-3 font-mono text-[12px] leading-5 text-[#f4fffd]">
+      <div className="mb-1 text-[11px] uppercase tracking-[0.24em] text-[#00f2ff]">input</div>
+      <div className="truncate text-[#f4fffd]">{props.command}</div>
+      <div className="mt-1 text-[#f4fffd]/70">{props.description}</div>
     </div>
   );
 }
 
-function ResponseCard(props: Extract<TranscriptBlock, { kind: 'response' }>) {
-  const { paragraphs, accent } = props;
-
+function RoutingCard(props: { lines: string[]; accent: string }) {
   return (
     <div className="mb-4 rounded-[2px] border border-[#3a494b]/28 bg-[#171717]/95 px-4 py-3 font-mono text-[13px] leading-6 text-[#e5e2e1]">
-      <div className="mb-2 text-[11px] uppercase tracking-[0.24em]" style={{ color: accent }}>
-        output
+      <div className="mb-2 text-[11px] uppercase tracking-[0.24em]" style={{ color: props.accent }}>
+        routing
       </div>
-      <div className="space-y-1">
-        {paragraphs.map((paragraph) => (
-          <p key={paragraph} className="whitespace-pre-wrap text-[#e5e2e1]/92">
-            {paragraph}
-          </p>
+      <div className="space-y-0.5">
+        {props.lines.map((line, i) => (
+          <div key={i} className="text-[#b9cacb]/88">{line}</div>
         ))}
       </div>
     </div>
   );
 }
 
-function DoneCard({ message }: { message: string }) {
+function ContextCard(props: { lines: string[]; accent: string }) {
   return (
     <div className="mb-4 rounded-[2px] border border-[#3a494b]/28 bg-[#171717]/95 px-4 py-3 font-mono text-[13px] leading-6 text-[#e5e2e1]">
-      <div className="flex items-center gap-2 text-[#00f2ff]">
-        <span>✓</span>
-        <span className="font-semibold">engineering-lead 6s</span>
+      <div className="mb-2 text-[11px] uppercase tracking-[0.24em]" style={{ color: props.accent }}>
+        context
       </div>
-      <p className="mt-1 whitespace-pre-wrap text-[#e5e2e1]/92">{message}</p>
+      <div className="space-y-0.5">
+        {props.lines.map((line, i) => (
+          <div key={i} className="text-[#b9cacb]/88">{line}</div>
+        ))}
+      </div>
     </div>
   );
 }
 
-function LeadTile({ lead }: { lead: LeadCard }) {
-  return (
-    <div
-      className="min-h-[112px] rounded-[2px] border border-[#b9cacb]/80 bg-[#171717]/92 px-4 py-3 font-mono text-[12px] leading-5 text-[#e5e2e1]"
-      style={{
-        boxShadow: 'inset 0 0 0 1px rgba(185, 202, 203, 0.08)',
-      }}
-    >
-      <div className="text-[18px] font-semibold leading-6" style={{ color: '#00f2ff' }}>
-        {lead.title}
-      </div>
-      <div className="text-[#e5e2e1]">{lead.subtitle}</div>
-      <div className="text-[#7bf5dc]">{lead.status}</div>
-      <div className="mt-1 truncate text-[#e5e2e1]/95">{lead.task}</div>
-    </div>
-  );
-}
-
-function ActiveLeadTile({
-  lead,
-  live,
-  status,
-  task,
-}: {
-  lead: LeadCard;
-  live: boolean;
-  status: string;
-  task: string;
+function StreamingCard(props: {
+  content: string;
+  accent: string;
+  onComplete?: () => void;
+  scrollContainerRef?: RefObject<HTMLDivElement | null>;
 }) {
+  const [displayed, setDisplayed] = useState('');
+  const completedRef = useRef(false);
+  const onCompleteCalledRef = useRef(false);
+
+  useEffect(() => {
+    setDisplayed('');
+    completedRef.current = false;
+    onCompleteCalledRef.current = false;
+    let index = 0;
+    const chars = props.content.split('');
+
+    const tick = () => {
+      if (index < chars.length) {
+        setDisplayed(chars.slice(0, index + 1).join(''));
+        index++;
+        const container = props.scrollContainerRef?.current;
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      } else if (!completedRef.current) {
+        completedRef.current = true;
+        if (!onCompleteCalledRef.current) {
+          onCompleteCalledRef.current = true;
+          setTimeout(() => {
+            props.onComplete?.();
+          }, 50);
+        }
+      }
+    };
+
+
+    const interval = setInterval(tick, 10);
+    return () => clearInterval(interval);
+  }, [props.content, props.scrollContainerRef]);
+
+  const isComplete = completedRef.current;
+
   return (
-    <div
-      className={`min-h-[112px] rounded-[2px] border px-4 py-3 font-mono text-[12px] leading-5 text-[#e5e2e1] transition-colors duration-300 ${live ? 'border-[#00f2ff]/80 bg-[#111a1b]/96' : 'border-[#b9cacb]/80 bg-[#171717]/92'
-        }`}
-      style={{
-        boxShadow: live ? 'inset 0 0 0 1px rgba(0, 242, 255, 0.12)' : 'inset 0 0 0 1px rgba(185, 202, 203, 0.08)',
-      }}
-    >
-      <div className="text-[18px] font-semibold leading-6" style={{ color: '#00f2ff' }}>
-        {lead.title}
+    <div className="mb-4 rounded-[2px] border border-[#3a494b]/28 bg-[#171717]/95 px-4 py-3 font-mono text-[13px] leading-5 text-[#e5e2e1]">
+      <div className="mb-2 text-[11px] uppercase tracking-[0.24em]" style={{ color: props.accent }}>
+        output
       </div>
-      <div className="text-[#e5e2e1]">{lead.subtitle}</div>
-      <div className="flex items-center gap-2 text-[#7bf5dc]">
-        {live ? <span className="text-[#00f2ff] animate-pulse">●</span> : null}
-        <span>{status}</span>
+      <pre className="whitespace-pre-wrap break-all text-[#b9cacb]/88">
+        {displayed}
+        {!isComplete && <span className="animate-pulse">▋</span>}
+      </pre>
+      {isComplete && (
+        <div className="mt-2 flex items-center gap-2">
+          <span className="h-1.5 w-1.5 rounded-full bg-[#10B981]" />
+          <span className="text-[10px] uppercase tracking-widest text-[#10B981]/70">complete</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LifecycleCard(props: { lines: string[]; accent: string }) {
+  return (
+    <div className="mb-4 rounded-[2px] border border-[#3a494b]/28 bg-[#171717]/95 px-4 py-3 font-mono text-[13px] leading-6 text-[#e5e2e1]">
+      <div className="mb-2 text-[11px] uppercase tracking-[0.24em]" style={{ color: props.accent }}>
+        lifecycle
       </div>
-      <div className="mt-1 truncate text-[#e5e2e1]/95">{task}</div>
+      <div className="space-y-0.5">
+        {props.lines.map((line, i) => (
+          <div key={i} className="text-[#b9cacb]/88">{line}</div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -181,17 +201,16 @@ export default function HeroSection() {
     }
     return `${date}-${hash}`;
   }, []);
+
   const [showPrelude, setShowPrelude] = useState(true);
   const [preludeTyped, setPreludeTyped] = useState('');
   const [mainReady, setMainReady] = useState(false);
   const [typedPrompt, setTypedPrompt] = useState('');
   const [phaseIndex, setPhaseIndex] = useState<number | null>(null);
-  const [toolSeconds, setToolSeconds] = useState(0);
-  const [responseCount, setResponseCount] = useState(0);
   const [history, setHistory] = useState<TranscriptBlock[]>([]);
-  const engineeringLeadLive = phaseIndex === 0;
-  const engineeringLeadStatus = engineeringLeadLive ? `running ${toolSeconds}s` : `✓ done ${runningSecondsGoal}s`;
-  const engineeringLeadTask = engineeringLeadLive ? toolTask : leadCards[1].task;
+  const [streamingDone, setStreamingDone] = useState(false);
+  const promptText = 'Generate the react components using the system design from Stitch MCP server';
+  const preludeCommand = 'mah --runtime pi run -c';
 
   useEffect(() => {
     let cancelled = false;
@@ -216,10 +235,10 @@ export default function HeroSection() {
             if (cancelled) return;
             setShowPrelude(false);
             setMainReady(true);
-          }, 1100),
+          }, 700),
         );
       }
-    }, 46);
+    }, 40);
 
     return () => {
       cancelled = true;
@@ -238,8 +257,6 @@ export default function HeroSection() {
 
     setTypedPrompt('');
     setPhaseIndex(null);
-    setToolSeconds(0);
-    setResponseCount(0);
     setHistory([]);
 
     const promptTimer = window.setInterval(() => {
@@ -253,10 +270,10 @@ export default function HeroSection() {
         timers.push(
           window.setTimeout(() => {
             if (!cancelled) setPhaseIndex(0);
-          }, 350),
+          }, 200),
         );
       }
-    }, 22);
+    }, 18);
 
     return () => {
       cancelled = true;
@@ -267,139 +284,52 @@ export default function HeroSection() {
 
   useEffect(() => {
     if (!mainReady) return;
-
     if (phaseIndex === null) return;
-
-    let cancelled = false;
-    const timers: number[] = [];
-
-    if (phaseIndex === 0) {
-      setToolSeconds(0);
-      let finished = false;
-      const tick = window.setInterval(() => {
-        if (cancelled || finished) return;
-
-        setToolSeconds((prev) => {
-          const next = prev + 1;
-          if (next >= runningSecondsGoal && !finished) {
-            finished = true;
-            window.clearInterval(tick);
-            timers.push(
-              window.setTimeout(() => {
-                if (cancelled) return;
-                setHistory((prevHistory) => [
-                  ...prevHistory,
-                  {
-                    kind: 'tool',
-                    command: `delegate_agent engineering-lead — ${toolTask}`,
-                    lead: 'engineering-lead',
-                    task: toolTask,
-                    seconds: runningSecondsGoal,
-                    done: true,
-                    accent: '#7fd1ff',
-                  },
-                ]);
-                setPhaseIndex(1);
-              }, 500),
-            );
-          }
-          return next;
-        });
-      }, 780);
-
+    if (phaseIndex >= transcriptSequence.length) {
+      const doneTimer = window.setTimeout(() => {
+        setCycleId((v) => v + 1);
+      }, 1200);
       return () => {
-        cancelled = true;
-        window.clearInterval(tick);
-        timers.forEach((timer) => window.clearTimeout(timer));
+        window.clearTimeout(doneTimer);
       };
     }
 
-    if (phaseIndex === 1) {
-      setResponseCount(0);
-      let finished = false;
-      const tick = window.setInterval(() => {
-        if (cancelled || finished) return;
+    const block = transcriptSequence[phaseIndex];
 
-        setResponseCount((prev) => {
-          const next = Math.min(prev + 1, responseParagraphs.length);
-          if (next >= responseParagraphs.length && !finished) {
-            finished = true;
-            window.clearInterval(tick);
-            timers.push(
-              window.setTimeout(() => {
-                if (cancelled) return;
-                setHistory((prevHistory) => [
-                  ...prevHistory,
-                  {
-                    kind: 'response',
-                    paragraphs: responseParagraphs,
-                    accent: '#7bf5dc',
-                  },
-                ]);
-                setPhaseIndex(2);
-              }, 500),
-            );
-          }
-          return next;
-        });
-      }, 820);
-
-      return () => {
-        cancelled = true;
-        window.clearInterval(tick);
-        timers.forEach((timer) => window.clearTimeout(timer));
-      };
+    // Lifecycle block must wait for streaming to complete
+    if (block.kind === 'lifecycle' && !streamingDone) {
+      const retryTimer = window.setTimeout(() => {
+        setPhaseIndex((prev) => prev);
+      }, 100);
+      return () => window.clearTimeout(retryTimer);
     }
 
-    const doneTimer = window.setTimeout(() => {
-      if (cancelled) return;
-      timers.push(
-        window.setTimeout(() => {
-          if (!cancelled) setCycleId((value) => value + 1);
-        }, 1500),
-      );
-    }, 500);
+    let delay = 550;
+    if (block.kind === 'lifecycle') {
+      delay = 500;
+    } else if (block.kind === 'streaming') {
+      delay = 400;
+    }
 
-    return () => {
-      cancelled = true;
-      window.clearTimeout(doneTimer);
-      timers.forEach((timer) => window.clearTimeout(timer));
-    };
-  }, [phaseIndex, mainReady]);
+    const timer = window.setTimeout(() => {
+      setHistory((prev) => [...prev, block]);
+      if (block.kind === 'streaming') {
+        setStreamingDone(false); // reset so lifecycle waits
+      }
+      setPhaseIndex((prev) => (prev !== null ? prev + 1 : null));
+    }, delay);
 
+    return () => window.clearTimeout(timer);
+  }, [phaseIndex, mainReady, streamingDone]);
+
+  // Keep only the terminal transcript scrolled, never the whole page.
   useEffect(() => {
     if (!mainReady) return;
-
-    const viewport = transcriptRef.current;
-    if (!viewport) return;
-
-    const raf = window.requestAnimationFrame(() => {
-      viewport.scrollTop = viewport.scrollHeight;
-    });
-
-    return () => window.cancelAnimationFrame(raf);
-  }, [history, typedPrompt, phaseIndex, toolSeconds, responseCount, mainReady]);
-
-  const activeBlock =
-    phaseIndex === 0 ? (
-      <ToolCard
-        command={`delegate_agent engineering-lead — ${toolTask}`}
-        lead="engineering-lead"
-        task={toolTask}
-        seconds={toolSeconds}
-        done={false}
-        accent="#7fd1ff"
-        kind="tool"
-      />
-    ) : phaseIndex === 1 ? (
-      <ResponseCard
-        paragraphs={responseParagraphs.slice(0, responseCount)}
-        accent="#7bf5dc"
-        kind="response"
-      />
-    ) : phaseIndex === 2 ? (
-      <DoneCard message={doneMessage} />
-    ) : null;
+    const container = transcriptRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
+  }, [history.length, streamingDone, mainReady]);
 
   return (
     <section className="relative w-full max-w-[1280px] mx-auto px-6 py-[24px] md:px-10 lg:px-20">
@@ -407,19 +337,18 @@ export default function HeroSection() {
         <div className="flex max-w-[760px] flex-col items-center text-center">
           <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#3a494b]/28 bg-[#1a1a1a]/82 px-4 py-2 font-mono text-[11px] uppercase tracking-[0.24em] text-[#b9cacb]">
             <span className="h-2 w-2 rounded-full bg-[#00f2ff] shadow-[0_0_12px_rgba(0,242,255,0.75)]" />
-            runtime-agnostic · multi-agent orchestration
+            runtime-agnostic · operational intelligence
           </div>
 
           <h1 className="max-w-[760px] font-inter text-[2.65rem] font-semibold tracking-tight text-[#e5e2e1] md:text-[4.2rem] md:leading-[1.02]">
-            The Multi-Agent {' '}
+            Operational Intelligence for{' '}
             <span className="bg-gradient-to-r from-[#00f2ff] to-[#7a8cff] bg-clip-text text-transparent">
-              Orchestration Layer
+              Agent Runtimes
             </span>
           </h1>
 
           <p className="mt-5 max-w-[820px] font-inter text-base leading-7 text-[#b9cacb] md:text-lg">
-            Define crews, route work, inspect sessions, and ship agentic systems with a CLI-first
-            observable workflow that delivers.
+            MAH selects the right agent based on expertise. Loads bounded context. Makes execution visible.
           </p>
         </div>
 
@@ -429,8 +358,7 @@ export default function HeroSection() {
           <div className="flex flex-col gap-4">
             <div
               ref={preludeRef}
-              className={`relative w-full overflow-hidden rounded-[22px] border border-[#3a494b]/28 bg-[#111111] shadow-[0_18px_42px_rgba(0,0,0,0.34)] transition-all duration-700 ${showPrelude ? 'max-h-[160px] opacity-100' : 'max-h-0 opacity-0'
-                }`}
+              className={`relative w-full overflow-hidden rounded-[22px] border border-[#3a494b]/28 bg-[#111111] shadow-[0_18px_42px_rgba(0,0,0,0.34)] transition-all duration-700 ${showPrelude ? 'max-h-[160px] opacity-100' : 'max-h-0 opacity-0'}`}
             >
               <div className="flex items-center justify-between border-b border-[#3a494b]/20 px-4 py-2">
                 <div className="flex items-center gap-2">
@@ -450,10 +378,11 @@ export default function HeroSection() {
             </div>
 
             <div
-              className={`relative w-full overflow-hidden rounded-[28px] border border-[#3a494b]/28 bg-[#171717] shadow-[0_28px_90px_rgba(0,0,0,0.42)] transition-all duration-700 ${mainReady ? 'opacity-100' : 'opacity-0'
-                }`}
+              className={`relative w-full overflow-hidden rounded-[28px] border border-[#3a494b]/28 bg-[#171717] shadow-[0_28px_90px_rgba(0,0,0,0.42)] transition-all duration-700 ${mainReady ? 'opacity-100' : 'opacity-0'}`}
               style={{
-                height: window.innerWidth < 768 ? 'clamp(520px, 88vh, 720px)' : 'clamp(420px, 65vh, 720px)',
+                height: typeof window !== 'undefined' && window.innerWidth < 768
+                  ? 'clamp(520px, 88vh, 720px)'
+                  : 'clamp(420px, 65vh, 720px)',
               }}
             >
               <div className="flex items-center justify-between border-b border-[#3a494b]/28 px-5 py-3">
@@ -471,43 +400,42 @@ export default function HeroSection() {
               <div className="grid h-[calc(100%-48px)] grid-rows-[minmax(0,1fr)_auto]">
                 <div
                   ref={transcriptRef}
-                  className="min-h-0 overflow-y-scroll px-5 py-5 font-mono text-[13px] leading-6 text-[#e5e2e1]"
+                  className="min-h-0 overflow-y-auto px-5 py-5 font-mono text-[13px] leading-6 text-[#e5e2e1]"
                   style={{
                     scrollbarGutter: 'stable',
                     scrollbarColor: '#00f2ff #171717',
                   }}
                 >
-                  {history.map((entry, index) =>
-                    entry.kind === 'tool' ? (
-                      <ToolCard key={`${entry.kind}-${index}`} {...entry} kind="tool" />
-                    ) : (
-                      <ResponseCard key={`${entry.kind}-${index}`} {...entry} kind="response" />
-                    ),
-                  )}
-
-                  {activeBlock}
+                  {history.map((entry, index) => {
+                    if (entry.kind === 'command') {
+                      return <CommandCard key={index} command={entry.command} description={entry.description} />;
+                    }
+                    if (entry.kind === 'routing') {
+                      return <RoutingCard key={index} lines={entry.lines} accent={entry.accent} />;
+                    }
+                    if (entry.kind === 'context') {
+                      return <ContextCard key={index} lines={entry.lines} accent={entry.accent} />;
+                    }
+                    if (entry.kind === 'streaming') {
+                      return (
+                        <StreamingCard
+                          key={index}
+                          content={entry.content}
+                          accent={entry.accent}
+                          onComplete={() => setStreamingDone(true)}
+                          scrollContainerRef={transcriptRef}
+                        />
+                      );
+                    }
+                    if (entry.kind === 'lifecycle') {
+                      return <LifecycleCard key={index} lines={entry.lines} accent={entry.accent} />;
+                    }
+                    return null;
+                  })}
                 </div>
 
                 <div className="shrink-0 border-t border-[#3a494b]/28 bg-[#171717]/96 px-5 py-4">
                   <div className="mb-4 h-px w-full bg-gradient-to-r from-[#00f2ff] via-[#2792ff] to-transparent opacity-50" />
-
-                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                    {leadCards
-                      .filter((lead) => typeof window !== 'undefined' && window.innerWidth < 768 ? lead.title === 'Engineering Lead' : true)
-                      .map((lead) =>
-                        lead.title === 'Engineering Lead' ? (
-                          <ActiveLeadTile
-                            key={lead.title}
-                            lead={lead}
-                            live={engineeringLeadLive}
-                            status={engineeringLeadStatus}
-                            task={engineeringLeadTask}
-                          />
-                        ) : (
-                          <LeadTile key={lead.title} lead={lead} />
-                        ),
-                      )}
-                  </div>
 
                   <div className="mt-4 rounded-[2px] border border-[#3a494b]/28 bg-[#121212] px-4 py-3 font-mono text-sm text-[#e5e2e1]">
                     <div className="mb-1 text-[11px] uppercase tracking-[0.24em] text-[#b9cacb]">

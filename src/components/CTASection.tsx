@@ -14,7 +14,7 @@ export default function CTASection() {
     let animId: number;
     let nodes: Node[] = [];
 
-    const NODE_COUNT = window.innerWidth < 768 ? 100 : 200;
+    const NODE_COUNT = typeof window !== 'undefined' && window.innerWidth < 768 ? 100 : 200;
     const MAX_DIST = 150;
     const SPEED = 0.23;
 
@@ -123,7 +123,7 @@ export default function CTASection() {
   return (
     <section className="relative w-full overflow-hidden py-16 md:py-[100px]" style={{ minHeight: 'clamp(320px, 60vh, 480px)' }}>
       {/* Full-width mesh canvas */}
-      <canvas ref={canvasRef} className="absolute inset-0 z-0 w-full h-full" />
+      <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 z-0 w-full h-full" />
 
       {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center gap-8">
@@ -132,14 +132,14 @@ export default function CTASection() {
           className="rounded-xl flex items-center justify-center border border-[#3a494b]/10 backdrop-blur-md px-6 py-6 md:px-12 md:py-8"
           style={{ background: 'rgba(28, 27, 27, 0.21)' }}
         >
-          <h1 className="text-3xl md:text-[48px] sm:text-[18px] font-bold text-[#e5e2e1] leading-[1.1] tracking-tight font-inter text-center">
-            Stop wrestling agents.<br />Start <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2ff] to-[#2792ff]">shipping solutions.</span>
-          </h1>
+          <h2 className="text-2xl sm:text-3xl md:text-5xl font-bold text-[#e5e2e1] leading-[1.1] tracking-tight font-inter text-center">
+            Route to the right agent.<br />Load only what it needs.<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00f2ff] to-[#2792ff]">Ship.</span>
+          </h2>
         </div>
 
         {/* Subheadline */}
         <p className="text-[#e5e2e1]/70 text-lg md:text-xl max-w-[540px] font-inter text-center">
-          One YAML manifest. Any runtime. Structured expertise routing, operational memory, and headless execution — out of the box.
+          Expertise routing, bounded context, and headless execution — out of the box. CLI-first, TUI-optional.
         </p>
 
         {/* Buttons + Trust signals */}
@@ -183,9 +183,9 @@ export default function CTASection() {
             </div>
             <div className="flex items-center gap-2 px-4 py-1.5 bg-[#201f1f] rounded-full">
               <svg className="text-[#00f2ff] text-[14px] w-[14px] h-[14px]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
-              <span className="font-space-grotesk text-xs uppercase tracking-widest text-[#e5e2e1]/80">Plugin system</span>
+              <span className="font-space-grotesk text-xs uppercase tracking-widest text-[#e5e2e1]/80">Evidence-based</span>
             </div>
           </div>
         </div>
