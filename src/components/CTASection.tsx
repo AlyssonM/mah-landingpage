@@ -14,8 +14,8 @@ export default function CTASection() {
     let animId: number;
     let nodes: Node[] = [];
 
-    const NODE_COUNT = typeof window !== 'undefined' && window.innerWidth < 768 ? 100 : 200;
-    const MAX_DIST = 150;
+    const NODE_COUNT = typeof window !== 'undefined' && window.innerWidth < 768 ? 80 : 200;
+    const MAX_DIST = typeof window !== 'undefined' && window.innerWidth < 768 ? 100 : 150;
     const SPEED = 0.23;
 
     function resize() {
