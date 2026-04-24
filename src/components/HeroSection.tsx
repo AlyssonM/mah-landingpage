@@ -1,4 +1,12 @@
-import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode, type RefObject } from 'react';
+
+type LeadCard = {
+  title: string;
+  subtitle: string;
+  idleStatus: string;
+  idleTask: string;
+  accent: string;
+};
 
 type TranscriptBlock =
   | {
@@ -61,6 +69,30 @@ const lifecycleLines = [
   '→ session saved: mah sessions list --last',
 ];
 
+const leadCards: LeadCard[] = [
+  {
+    title: 'Planning Lead',
+    subtitle: 'Lead · Planning',
+    idleStatus: 'o idle',
+    idleTask: 'Planning Lead planning lead',
+    accent: '#7bf5dc',
+  },
+  {
+    title: 'Engineering Lead',
+    subtitle: 'Lead · Engineering',
+    idleStatus: 'o idle',
+    idleTask: 'Engineering Lead engineering lead',
+    accent: '#7fd1ff',
+  },
+  {
+    title: 'Validation Lead',
+    subtitle: 'Lead · Validation',
+    idleStatus: 'o idle',
+    idleTask: 'Validation Lead validation lead',
+    accent: '#86f7e7',
+  },
+];
+
 const transcriptSequence: TranscriptBlock[] = [
   { kind: 'command', command: commandLine, description: commandDescription },
   { kind: 'routing', lines: routingLines, accent: '#00f2ff' },
@@ -98,7 +130,7 @@ function CommandCard(props: { command: string; description: string }) {
 function RoutingCard(props: { lines: string[]; accent: string }) {
   return (
     <div className="mb-4 rounded-[2px] border border-[#3a494b]/28 bg-[#171717]/95 px-4 py-3 font-mono text-[13px] leading-6 text-[#e5e2e1]">
-      <div className="mb-2 text-[11px] uppercase tracking-[0.24em]" style={{ color: props.accent }}>
+      <div className="mb-1 text-[11px] uppercase tracking-[0.24em]" style={{ color: props.accent }}>
         routing
       </div>
       <div className="space-y-0.5">
@@ -202,9 +234,46 @@ function LifecycleCard(props: { lines: string[]; accent: string }) {
   );
 }
 
+function LeadTile({
+  lead,
+  status,
+  task,
+  live = false,
+}: {
+  lead: LeadCard;
+  status: string;
+  task: string;
+  live?: boolean;
+}) {
+  return (
+    <div
+      className={`min-h-[96px] rounded-[2px] border px-4 py-2.0 font-mono text-[12px] leading-5 text-[#e5e2e1] transition-colors duration-300 ${live ? 'border-[#00f2ff]/80 bg-[#111a1b]/96' : 'border-[#b9cacb]/80 bg-[#171717]/92'
+        }`}
+      style={{
+        boxShadow: live ? 'inset 0 0 0 1px rgba(0, 242, 255, 0.12)' : 'inset 0 0 0 1px rgba(185, 202, 203, 0.08)',
+      }}
+    >
+      <div
+        className="mb-1 h-0.5 w-10 rounded-full"
+        style={{ backgroundColor: live ? '#00f2ff' : lead.accent }}
+      />
+      <div className="text-[18px] font-semibold leading-6" style={{ color: '#00f2ff' }}>
+        {lead.title}
+      </div>
+      <div className="text-[#e5e2e1]">{lead.subtitle}</div>
+      <div className="flex items-center gap-2 text-[#7bf5dc]">
+        {live ? <span className="text-[#00f2ff] animate-pulse">●</span> : null}
+        <span>{status}</span>
+      </div>
+      <div className="mt-1 truncate text-[#e5e2e1]/95">{task}</div>
+    </div>
+  );
+}
+
 export default function HeroSection() {
   const transcriptRef = useRef<HTMLDivElement | null>(null);
   const preludeRef = useRef<HTMLDivElement | null>(null);
+  const latestBlockRef = useRef<HTMLDivElement | null>(null);
   const [cycleId, setCycleId] = useState(0);
 
   const sessionId = useMemo(() => {
@@ -227,6 +296,20 @@ export default function HeroSection() {
   const [streamingDone, setStreamingDone] = useState(false);
   const promptText = 'Generate the react components using the system design from Stitch MCP server';
   const preludeCommand = 'mah --runtime pi run -c';
+  const hasRouting = history.some((entry) => entry.kind === 'routing');
+  const hasContext = history.some((entry) => entry.kind === 'context');
+  const hasStreaming = history.some((entry) => entry.kind === 'streaming');
+  const hasLifecycle = history.some((entry) => entry.kind === 'lifecycle');
+  const engineeringLive = hasRouting && !hasLifecycle;
+  const engineeringStatus = hasLifecycle ? '✓ done 4s' : engineeringLive ? '✓ running 4s' : 'o idle';
+  const engineeringTask = hasContext
+    ? '**Objective:** Restore hero title and colors'
+    : leadCards[1].idleTask;
+  const validationStatus = hasLifecycle ? '✓ done 1s' : 'o idle';
+  const validationTask = hasLifecycle ? 'Validation pass on lifecycle and transcript' : leadCards[2].idleTask;
+  const agentSummary = hasLifecycle ? 'Agents · 2 done · 1 idle' : engineeringLive || hasStreaming ? 'Agents · 1 running · 2 idle' : 'Agents · 3 idle';
+  const totalRuns = hasLifecycle ? '3 agents · 1 total runs' : '3 agents · 0 total runs';
+  const elapsedLabel = hasLifecycle ? '4s elapsed' : hasStreaming ? '3s elapsed' : hasContext ? '2s elapsed' : hasRouting ? '1s elapsed' : '0s elapsed';
 
   useEffect(() => {
     let cancelled = false;
@@ -370,9 +453,15 @@ export default function HeroSection() {
     if (!mainReady) return;
     const container = transcriptRef.current;
     if (container) {
-      container.scrollTop = container.scrollHeight;
+      const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+      if (isMobile && latestBlockRef.current) {
+        const top = Math.max(latestBlockRef.current.offsetTop - 20, 0);
+        container.scrollTop = top;
+      } else {
+        container.scrollTop = container.scrollHeight;
+      }
     }
-  }, [history.length, streamingDone, mainReady]);
+  }, [history.length, mainReady]);
 
   return (
     <section className="relative w-full max-w-[1280px] mx-auto px-6 py-[24px] md:px-10 lg:px-20">
@@ -424,8 +513,8 @@ export default function HeroSection() {
               className={`relative w-full overflow-hidden rounded-[28px] border border-[#3a494b]/28 bg-[#171717] shadow-[0_28px_90px_rgba(0,0,0,0.42)] transition-all duration-700 ${mainReady ? 'opacity-100' : 'opacity-0'}`}
               style={{
                 height: typeof window !== 'undefined' && window.innerWidth < 768
-                  ? 'clamp(520px, 88vh, 720px)'
-                  : 'clamp(420px, 65vh, 720px)',
+                  ? 'clamp(560px, 90vh, 760px)'
+                  : 'clamp(520px, 78vh, 820px)',
               }}
             >
               <div className="flex items-center justify-between border-b border-[#3a494b]/28 px-5 py-3">
@@ -440,45 +529,91 @@ export default function HeroSection() {
                 </div>
               </div>
 
-              <div className="grid h-[calc(100%-48px)] grid-rows-[minmax(0,1fr)_auto]">
+              <div
+                className="grid h-[calc(100%-48px)]"
+                style={{
+                  gridTemplateRows:
+                    typeof window !== 'undefined' && window.innerWidth < 768
+                      ? 'minmax(158px, 1fr) auto'
+                      : 'minmax(220px, 220px) auto',
+                }}
+              >
                 <div
                   ref={transcriptRef}
-                  className="min-h-0 overflow-y-auto px-5 py-5 font-mono text-[13px] leading-6 text-[#e5e2e1]"
+                  className="min-h-0 overflow-y-auto px-5 py-3 font-mono text-[13px] leading-6 text-[#e5e2e1]"
                   style={{
                     scrollbarGutter: 'stable',
                     scrollbarColor: '#00f2ff #171717',
                   }}
                 >
                   {history.map((entry, index) => {
+                    const isLatest = index === history.length - 1;
+                    let card: ReactNode = null;
                     if (entry.kind === 'command') {
-                      return <CommandCard key={index} command={entry.command} description={entry.description} />;
-                    }
-                    if (entry.kind === 'routing') {
-                      return <RoutingCard key={index} lines={entry.lines} accent={entry.accent} />;
-                    }
-                    if (entry.kind === 'context') {
-                      return <ContextCard key={index} lines={entry.lines} accent={entry.accent} />;
-                    }
-                    if (entry.kind === 'streaming') {
-                      return (
+                      card = <CommandCard command={entry.command} description={entry.description} />;
+                    } else if (entry.kind === 'routing') {
+                      card = <RoutingCard lines={entry.lines} accent={entry.accent} />;
+                    } else if (entry.kind === 'context') {
+                      card = <ContextCard lines={entry.lines} accent={entry.accent} />;
+                    } else if (entry.kind === 'streaming') {
+                      card = (
                         <StreamingCard
-                          key={index}
                           content={entry.content}
                           accent={entry.accent}
                           onComplete={() => setStreamingDone(true)}
                           scrollContainerRef={transcriptRef}
                         />
                       );
+                    } else if (entry.kind === 'lifecycle') {
+                      card = <LifecycleCard lines={entry.lines} accent={entry.accent} />;
                     }
-                    if (entry.kind === 'lifecycle') {
-                      return <LifecycleCard key={index} lines={entry.lines} accent={entry.accent} />;
-                    }
-                    return null;
+                    if (!card) return null;
+                    return (
+                      <div
+                        key={index}
+                        ref={isLatest ? latestBlockRef : null}
+                        className={index === 0 ? 'pt-6 md:pt-0' : undefined}
+                      >
+                        {card}
+                      </div>
+                    );
                   })}
                 </div>
 
                 <div className="shrink-0 border-t border-[#3a494b]/28 bg-[#171717]/96 px-5 py-4">
-                  <div className="mb-4 h-px w-full bg-gradient-to-r from-[#00f2ff] via-[#2792ff] to-transparent opacity-50" />
+                  <div className="mb-2 h-px w-full bg-gradient-to-r from-[#00f2ff] via-[#2792ff] to-transparent opacity-50" />
+
+                  <div className="mb-4">
+                    <div className="mb-2 flex items-center justify-between font-mono text-[12px] leading-5">
+                      <span className="text-[#00f2ff]">{agentSummary}</span>
+                      <span className="text-[#f6d74a]">Orchestrator</span>
+                    </div>
+                    <div className="mb-2 h-px w-full bg-[#f6d74a]" />
+                    <div className="grid grid-cols-1 gap-2.5 md:grid-cols-3">
+                      {(typeof window !== 'undefined' && window.innerWidth < 768
+                        ? leadCards.filter((lead) => lead.title === 'Engineering Lead')
+                        : leadCards
+                      ).map((lead) =>
+                        lead.title === 'Engineering Lead' ? (
+                          <LeadTile
+                            key={lead.title}
+                            lead={lead}
+                            status={engineeringStatus}
+                            task={engineeringTask}
+                            live={engineeringLive}
+                          />
+                        ) : lead.title === 'Validation Lead' ? (
+                          <LeadTile key={lead.title} lead={lead} status={validationStatus} task={validationTask} />
+                        ) : (
+                          <LeadTile key={lead.title} lead={lead} status={lead.idleStatus} task={lead.idleTask} />
+                        ),
+                      )}
+                    </div>
+                    <div className="mt-2 flex items-center justify-between font-mono text-[12px] leading-5 text-[#f6d74a]">
+                      <span>{totalRuns}</span>
+                      <span>{elapsedLabel}</span>
+                    </div>
+                  </div>
 
                   <div className="mt-4 rounded-[2px] border border-[#3a494b]/28 bg-[#121212] px-4 py-3 font-mono text-sm text-[#e5e2e1]">
                     <div className="mb-1 text-[11px] uppercase tracking-[0.24em] text-[#b9cacb]">
