@@ -63,7 +63,7 @@ export default function FeaturesSection() {
         {features.map((feature) => (
           <div
             key={feature.title}
-            className="bg-[#1c1b1b] p-8 rounded-xl flex flex-col justify-between hover:bg-[#201f1f] transition-all duration-300 group"
+            className="bg-[#1c1b1b] p-8 rounded-xl flex flex-col justify-between hover:bg-[#201f1f] transition-colors duration-200 group"
           >
             <div>
               <div className="mb-6 w-12 h-12 flex items-center justify-center text-[#00f2ff]">

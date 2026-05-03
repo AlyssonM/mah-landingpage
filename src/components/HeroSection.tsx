@@ -207,7 +207,7 @@ function StreamingCard(props: {
       </div>
       <pre className="whitespace-pre-wrap break-all text-[#b9cacb]/88">
         {displayed}
-        {!isComplete && <span className="animate-pulse">▋</span>}
+        {!isComplete && <span className="mah-cursor-blink">▋</span>}
       </pre>
       {isComplete && (
         <div className="mt-2 flex items-center gap-2">
@@ -262,7 +262,7 @@ function LeadTile({
       </div>
       <div className="text-[#e5e2e1]">{lead.subtitle}</div>
       <div className="flex items-center gap-2 text-[#7bf5dc]">
-        {live ? <span className="text-[#00f2ff] animate-pulse">●</span> : null}
+        {live ? <span className="mah-live-dot text-[#00f2ff]">●</span> : null}
         <span>{status}</span>
       </div>
       <div className="mt-1 truncate text-[#e5e2e1]/95">{task}</div>
@@ -490,7 +490,7 @@ export default function HeroSection() {
           <div className="flex flex-col gap-4">
             <div
               ref={preludeRef}
-              className={`relative w-full overflow-hidden rounded-[22px] border border-[#3a494b]/28 bg-[#111111] shadow-[0_18px_42px_rgba(0,0,0,0.34)] transition-all duration-700 ${showPrelude ? 'max-h-[160px] opacity-100' : 'max-h-0 opacity-0'}`}
+              className={`relative w-full overflow-hidden rounded-[22px] border border-[#3a494b]/28 bg-[#111111] shadow-[0_18px_42px_rgba(0,0,0,0.34)] transition-all duration-500 ${showPrelude ? 'max-h-[160px] opacity-100' : 'max-h-0 opacity-0'}`}
             >
               <div className="flex items-center justify-between border-b border-[#3a494b]/20 px-4 py-2">
                 <div className="flex items-center gap-2">
@@ -505,12 +505,12 @@ export default function HeroSection() {
               <div className="px-4 py-6 font-mono text-[16px] leading-8 text-[#e5e2e1]">
                 <span className="text-[#00f2ff]">$ </span>
                 <span className="text-[#e5e2e1]">{preludeTyped}</span>
-                <span className="ml-1 inline-block h-5 w-[9px] animate-pulse bg-[#00f2ff]" />
+                <span className="mah-cursor-blink ml-1 inline-block h-5 w-[9px] bg-[#00f2ff]" />
               </div>
             </div>
 
             <div
-              className={`relative w-full overflow-hidden rounded-[28px] border border-[#3a494b]/28 bg-[#171717] shadow-[0_28px_90px_rgba(0,0,0,0.42)] transition-all duration-700 ${mainReady ? 'opacity-100' : 'opacity-0'}`}
+              className={`relative w-full overflow-hidden rounded-[28px] border border-[#3a494b]/28 bg-[#171717] shadow-[0_28px_90px_rgba(0,0,0,0.42)] transition-all duration-500 ${mainReady ? 'opacity-100' : 'opacity-0'}`}
               style={{
                 height: typeof window !== 'undefined' && window.innerWidth < 768
                   ? 'clamp(560px, 90vh, 760px)'
@@ -622,7 +622,7 @@ export default function HeroSection() {
                     <div className="flex items-center gap-2">
                       <span className="text-[#00f2ff]">›</span>
                       <span className="text-[#e5e2e1]/86">{typedPrompt}</span>
-                      <span className="inline-block h-4 w-[8px] animate-pulse bg-[#00f2ff]" />
+                      <span className="mah-cursor-blink inline-block h-4 w-[8px] bg-[#00f2ff]" />
                     </div>
                   </div>
 

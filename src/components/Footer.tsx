@@ -1,8 +1,6 @@
 const resourcesLinks = [
-  { label: 'Documentation', href: '#' },
-  { label: 'GitHub', href: '#' },
-  { label: 'Examples', href: '#' },
-  { label: 'Changelog', href: '#' },
+  { label: 'Docs', href: '#' },
+  { label: 'GitHub', href: 'https://github.com/Hive-Hue/meta-agents-harness' },
 ];
 
 const communityLinks = [
@@ -23,7 +21,7 @@ export default function Footer() {
             <span className="font-inter font-black text-2xl tracking-tighter text-[#e5e2e1]">MAH</span>
           </div>
           <div className="space-y-2">
-            <p className="font-space-grotesk text-[#e5e2e1]/50 text-sm tracking-wide">Meta-Agents Harness</p>
+            <p className="font-space-grotesk text-[#e5e2e1]/50 text-sm tracking-wide">Meta Agent Harness (MAH)</p>
             <p className="text-[#e5e2e1]/50 text-xs max-w-[240px] leading-relaxed">
               Open source agent orchestration for developers who ship.
             </p>
@@ -38,7 +36,7 @@ export default function Footer() {
               <a
                 key={link.label}
                 href={link.href}
-                className="font-space-grotesk text-sm text-[#b9cacb]/60 hover:text-[#00F2FF] hover:translate-x-1 transition-all duration-300"
+                className="font-space-grotesk text-sm text-[#b9cacb]/60 hover:text-[#00F2FF] transition-colors duration-200"
               >
                 {link.label}
               </a>
@@ -55,7 +53,7 @@ export default function Footer() {
                 <a
                   key={link.label}
                   href={link.href}
-                  className="font-space-grotesk text-sm text-[#b9cacb]/60 hover:text-[#00F2FF] hover:translate-x-1 transition-all duration-300"
+                  className="font-space-grotesk text-sm text-[#b9cacb]/60 hover:text-[#00F2FF] transition-colors duration-200"
                 >
                   {link.label}
                 </a>
@@ -69,7 +67,7 @@ export default function Footer() {
       <div className="bg-[#201f1f] w-full pt-6 pb-8 border-t border-white/[0.02]">
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-[#e5e2e1]/50 font-inter">
-            © 2025 Meta-Agents Harness. Precision Intelligence Execution. MIT License.
+            © 2025 Meta Agent Harness (MAH). Precision Intelligence Execution. AGPLv3 License.
           </p>
           <div className="flex items-center gap-6">
             {/* Badge Component */}
