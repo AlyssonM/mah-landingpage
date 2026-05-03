@@ -4,9 +4,8 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = [
-    { label: 'Documentation', href: '#' },
-    { label: 'GitHub', href: '#' },
-    { label: 'Examples', href: '#' },
+    { label: 'Docs', href: '#' },
+    { label: 'GitHub', href: 'https://github.com/Hive-Hue/meta-agents-harness' },
   ];
 
   return (
@@ -14,7 +13,7 @@ export default function Header() {
       <nav className="flex justify-between items-center w-full px-6 py-4 max-w-[1440px] mx-auto">
         <div className="flex items-center">
           <span className="font-inter font-bold tracking-tighter text-[#E5E2E1] text-xl">
-            Meta Agent Harness
+            Meta Agents Harness - MAH
           </span>
         </div>
 

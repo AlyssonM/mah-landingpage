@@ -308,7 +308,7 @@ function LayerCard({ layer, isActive, onActivate, onDeactivate, onBlur, onClick 
 
       {/* Terminal expands below card */}
       <div
-        className="overflow-hidden transition-all duration-300 ease-out"
+        className="overflow-hidden transition-all duration-200 ease-out"
         style={{
           maxHeight: isActive ? (layer.key === 'crew' ? 480 : 320) : 0,
           opacity: isActive ? 1 : 0,
